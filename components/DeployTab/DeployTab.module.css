@@ -1,0 +1,171 @@
+.container {
+    max-width: 100%;
+  }
+  
+  .title {
+    font-size: 2rem;
+    margin-bottom: 30px;
+    color: #1f2937;
+    font-weight: 700;
+  }
+  
+  .formGroup {
+    margin-bottom: 28px;
+  }
+  
+  .label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #374151;
+    font-size: 16px;
+  }
+  
+  .input,
+  .textarea {
+    width: 100%;
+    padding: 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 16px;
+    font-family: inherit;
+    transition: all 0.3s ease;
+    background: white;
+    resize: vertical;
+  }
+  
+  .input:focus,
+  .textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    transform: translateY(-1px);
+  }
+  
+  .textarea {
+    font-family: 'Fira Code', Monaco, 'Cascadia Code', monospace;
+    line-height: 1.5;
+  }
+  
+  .previewSection {
+    background: #f9fafb;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 32px;
+    border: 1px solid #e5e7eb;
+  }
+  
+  .previewTitle {
+    font-size: 1.25rem;
+    margin-bottom: 16px;
+    color: #374151;
+    font-weight: 600;
+  }
+  
+  .parseButton {
+    background: #6366f1;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 20px;
+  }
+  
+  .parseButton:hover {
+    background: #5855eb;
+    transform: translateY(-1px);
+  }
+  
+  .recipientsList {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: white;
+  }
+  
+  .recipientItem {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f3f4f6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .recipientItem:last-child {
+    border-bottom: none;
+  }
+  
+  .recipientInfo {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
+  }
+  
+  .recipientAddress {
+    font-family: 'Fira Code', Monaco, monospace;
+    color: #6b7280;
+    font-size: 14px;
+  }
+  
+  .recipientAmount {
+    font-weight: 600;
+    color: #059669;
+  }
+  
+  .totalInfo {
+    padding: 12px 16px;
+    background: #f3f4f6;
+    text-align: center;
+    color: #374151;
+    font-size: 14px;
+  }
+  
+  .deployButton {
+    width: 100%;
+    padding: 18px 24px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  .deployButton:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(102, 126, 234, 0.4);
+  }
+  
+  .deployButton:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  .spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
