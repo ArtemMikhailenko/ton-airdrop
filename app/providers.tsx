@@ -19,7 +19,7 @@ export default function Providers({ children }: ProvidersProps) {
       return (
         <>
           <TonConnectUIProvider
-            manifestUrl={manifestUrl}
+            manifestUrl="https://ton-airdrop-three.vercel.app/tonconnect-manifest.json"
             
           >
             {children}
