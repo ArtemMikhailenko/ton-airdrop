@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import styles from './SimpleMassTransfer.module.css';
 
 export default function SimpleMassTransfer() {
-    const { sendToAll, getUserJettonWallet, isSending, progress, userAddress, isConnected } = useMassTransfer();
+    const { sendToAll, isSending, progress, userAddress, isConnected } = useMassTransfer();
     
     const [jettonMinter, setJettonMinter] = useState('EQD0vdSA_NedR9uvbgN9EikRX-suesDxGeFg69XQMavfLqIw');
     const [recipientsJson, setRecipientsJson] = useState(`[
@@ -17,11 +17,7 @@ export default function SimpleMassTransfer() {
   },
   {
     "address": "EQBIhPuWmjT7fP-VomuTWseE8JNWv2q7QYfsVQ1IZwnMk8wL",
-    "amount": "2000000000"
-  },
-  {
-    "address": "EQB4cwGljhouzFwc6EHpCacCtsK7_XIj-tNfM5udgW6IxO9R",
-    "amount": "1500000000"
+    "amount": "500000000"
   }
 ]`);
 
@@ -32,35 +28,74 @@ export default function SimpleMassTransfer() {
         }
 
         try {
-            // Парсим JSON
+            // Парсим и валидируем JSON
             const recipients = JSON.parse(recipientsJson);
             
-            // Валидируем адреса
-            recipients.forEach((r: any, i: number) => {
-                try {
-                    Address.parse(r.address);
-                } catch {
-                    throw new Error(`Invalid address at position ${i + 1}: ${r.address}`);
-                }
-            });
-
-            // Получаем адрес jetton кошелька пользователя
-            const userJettonWallet = await getUserJettonWallet(jettonMinter);
-            if (!userJettonWallet) {
-                toast.error('Could not get your jetton wallet address');
+            if (!Array.isArray(recipients) || recipients.length === 0) {
+                toast.error('Recipients must be a non-empty array');
                 return;
             }
 
-            console.log('💼 User jetton wallet:', userJettonWallet);
+            // ✅ УЛУЧШЕННАЯ валидация каждого получателя
+            for (let i = 0; i < recipients.length; i++) {
+                const r = recipients[i];
+                
+                // Проверяем наличие полей
+                if (!r.address || !r.amount) {
+                    toast.error(`Missing address or amount at position ${i + 1}`);
+                    return;
+                }
+                
+                // Проверяем адрес
+                try {
+                    Address.parse(r.address);
+                } catch {
+                    toast.error(`Invalid address at position ${i + 1}: ${r.address}`);
+                    return;
+                }
 
-            // Отправляем всем!
-            await sendToAll(recipients, userJettonWallet);
+                // Проверяем сумму
+                const amount = Number(r.amount);
+                if (isNaN(amount) || amount <= 0) {
+                    toast.error(`Invalid amount at position ${i + 1}: ${r.amount}`);
+                    return;
+                }
+            }
+
+            // ✅ ПРЕДУПРЕЖДЕНИЕ о стоимости
+            const gasNeeded = recipients.length * 0.1; // 0.1 TON за перевод
+            const totalTokens = recipients.reduce((sum: number, r: any) => sum + Number(r.amount), 0);
+            
+            const confirmed = confirm(
+                `🚀 MASS TRANSFER CONFIRMATION\n\n` +
+                `Recipients: ${recipients.length}\n` +
+                `Total tokens to send: ${(totalTokens / 1e9).toFixed(2)}\n` +
+                `Estimated gas cost: ~${gasNeeded} TON\n` +
+                `Each recipient = separate transaction\n\n` +
+                `⚠️ Make sure you have:\n` +
+                `• ${(totalTokens / 1e9).toFixed(2)} jetton tokens\n` +
+                `• ~${gasNeeded} TON for gas fees\n\n` +
+                `Continue?`
+            );
+
+            if (!confirmed) {
+                return;
+            }
+
+            console.log('💼 Starting transfer with jetton minter:', jettonMinter);
+
+            // ✅ ИСПРАВЛЕНО: передаем jettonMinter вместо userJettonWallet
+            await sendToAll(recipients, jettonMinter);
 
         } catch (error) {
             console.error('❌ Send error:', error);
             if (error instanceof Error) {
                 if (error.message.includes('JSON')) {
                     toast.error('❌ Invalid JSON format');
+                } else if (error.message.includes('insufficient funds')) {
+                    toast.error('❌ Not enough TON for gas fees');
+                } else if (error.message.includes('jetton')) {
+                    toast.error('❌ Jetton wallet error - check minter address');
                 } else {
                     toast.error(`❌ Error: ${error.message}`);
                 }
@@ -73,18 +108,57 @@ export default function SimpleMassTransfer() {
     const parseAndPreview = () => {
         try {
             const recipients = JSON.parse(recipientsJson);
-            const total = recipients.reduce((sum: number, r: any) => sum + Number(r.amount), 0);
             
-            toast.success(`✅ Valid JSON: ${recipients.length} recipients, ${(total / 1e9).toFixed(2)} total tokens`);
-        } catch {
+            if (!Array.isArray(recipients)) {
+                toast.error('❌ JSON must be an array');
+                return;
+            }
+            
+            const total = recipients.reduce((sum: number, r: any) => sum + Number(r.amount || 0), 0);
+            const gasEstimate = recipients.length * 0.1;
+            
+            toast.success(
+                `✅ Valid JSON!\n` +
+                `Recipients: ${recipients.length}\n` +
+                `Total tokens: ${(total / 1e9).toFixed(2)}\n` +
+                `Gas needed: ~${gasEstimate} TON`,
+                { duration: 4000 }
+            );
+        } catch (error) {
             toast.error('❌ Invalid JSON format');
+        }
+    };
+
+    // ✅ Функция для очистки JSON
+    const cleanJson = () => {
+        setRecipientsJson(`[
+  {
+    "address": "",
+    "amount": "1000000000"
+  }
+]`);
+      
+    };
+
+    // ✅ Функция для добавления получателя
+    const addRecipient = () => {
+        try {
+            const recipients = JSON.parse(recipientsJson);
+            recipients.push({
+                address: "",
+                amount: "1000000000"
+            });
+            setRecipientsJson(JSON.stringify(recipients, null, 2));
+            toast.success('✅ Recipient added');
+        } catch {
+            toast.error('❌ Fix JSON format first');
         }
     };
 
     return (
         <div className={styles.container}>
             <h1 className={styles.title}>🚀 Simple Mass Token Transfer</h1>
-            <p className={styles.subtitle}>Paste JSON → Click Send → Tokens delivered!</p>
+            <p className={styles.subtitle}>Send jetton tokens to multiple recipients instantly!</p>
 
             {/* Статус подключения */}
             <div className={styles.status}>
@@ -94,7 +168,7 @@ export default function SimpleMassTransfer() {
                     </div>
                 ) : (
                     <div className={styles.disconnected}>
-                        ❌ Please connect your TON wallet
+                        ❌ Please connect your TON wallet first
                     </div>
                 )}
             </div>
@@ -109,6 +183,9 @@ export default function SimpleMassTransfer() {
                     onChange={(e) => setJettonMinter(e.target.value)}
                     placeholder="Enter jetton minter address"
                 />
+                <div className={styles.inputHint}>
+                    Contract address of the jetton you want to send
+                </div>
             </div>
 
             {/* Recipients JSON */}
@@ -121,18 +198,38 @@ export default function SimpleMassTransfer() {
                     rows={12}
                     placeholder="Paste your recipients JSON here..."
                 />
-                <button
-                    className={styles.previewButton}
-                    onClick={parseAndPreview}
-                    type="button"
-                >
-                    🔍 Validate JSON
-                </button>
+                
+                {/* ✅ Кнопки управления JSON */}
+                <div className={styles.buttonRow}>
+                    <button
+                        className={styles.validateButton}
+                        onClick={parseAndPreview}
+                        type="button"
+                    >
+                        🔍 Validate JSON
+                    </button>
+                    <button
+                        className={styles.addButton}
+                        onClick={addRecipient}
+                        type="button"
+                    >
+                        ➕ Add Recipient
+                    </button>
+                    <button
+                        className={styles.clearButton}
+                        onClick={cleanJson}
+                        type="button"
+                    >
+                        📝 Template
+                    </button>
+                </div>
+                
+                
             </div>
 
             {/* Progress */}
             {isSending && (
-                <div className={styles.progress}>
+                <div className={styles.progressSection}>
                     <div className={styles.progressBar}>
                         <div 
                             className={styles.progressFill}
@@ -140,7 +237,10 @@ export default function SimpleMassTransfer() {
                         />
                     </div>
                     <div className={styles.progressText}>
-                        Sending... {progress.current} / {progress.total}
+                        Sending... {progress.current} / {progress.total} recipients
+                    </div>
+                    <div className={styles.progressSubtext}>
+                        ⏳ Please wait and confirm each transaction in your wallet
                     </div>
                 </div>
             )}
@@ -161,20 +261,33 @@ export default function SimpleMassTransfer() {
                 )}
             </button>
 
-            {/* Instructions */}
+            {/* ✅ ОБНОВЛЕННЫЕ инструкции */}
             <div className={styles.instructions}>
                 <h3>📋 How to use:</h3>
                 <ol>
-                    <li>Connect your TON wallet</li>
-                    <li>Make sure you have jetton tokens in your wallet</li>
-                    <li>Paste your recipients JSON</li>
-                    <li>Click "Send to All Recipients"</li>
-                    <li>Confirm transactions in your wallet</li>
+                    <li><strong>Connect wallet</strong> - Must have jetton tokens + TON for gas</li>
+                    <li><strong>Enter minter address</strong> - Contract that created your tokens</li>
+                    <li><strong>Paste recipients JSON</strong> - Use template or validate existing</li>
+                    <li><strong>Validate JSON</strong> - Check format and calculate costs</li>
+                    <li><strong>Confirm transfer</strong> - Review total cost before sending</li>
+                    <li><strong>Approve transactions</strong> - Each recipient = separate transaction</li>
                 </ol>
                 
+                <div className={styles.costInfo}>
+                    <h4>💰 Cost Breakdown:</h4>
+                    <ul>
+                        <li><strong>Gas:</strong> ~0.1 TON per recipient</li>
+                        <li><strong>Tokens:</strong> Amount specified in JSON</li>
+                        <li><strong>Example:</strong> 5 recipients = ~0.5 TON gas + tokens</li>
+                    </ul>
+                </div>
+                
                 <div className={styles.warning}>
-                    ⚠️ <strong>Note:</strong> Transactions are sent in batches of 4 recipients.
-                    Each batch requires ~0.2 TON for gas fees.
+                    ⚠️ <strong>Important:</strong> 
+                    <br />• One transaction per recipient (not batches)
+                    <br />• 3 second pause between transactions
+                    <br />• Can skip failed recipients and continue
+                    <br />• Make sure you have enough TON for gas!
                 </div>
             </div>
         </div>
