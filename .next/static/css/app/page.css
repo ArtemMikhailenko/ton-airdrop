@@ -175,6 +175,7 @@
 /*!***********************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[11].oneOf[7].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[11].oneOf[7].use[3]!./components/ClaimTab/ClaimTab.module.css ***!
   \***********************************************************************************************************************************************************************************************************************************************************************************/
+
 .ClaimTab_container__cZu_s {
     max-width: 600px;
     margin: 0 auto;
@@ -188,8 +189,28 @@
     text-align: center;
   }
   
+  .ClaimTab_connectionStatus__030Q8 {
+    margin-bottom: 20px;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 600;
+  }
+  
+  .ClaimTab_connected__m3rib {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+  }
+  
+  .ClaimTab_disconnected__quM9d {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
+  
   .ClaimTab_formGroup__KLMvA {
-    margin-bottom: 28px;
+    margin-bottom: 24px;
   }
   
   .ClaimTab_label__DOznG {
@@ -200,7 +221,8 @@
     font-size: 16px;
   }
   
-  .ClaimTab_input__czK2W {
+  .ClaimTab_input__czK2W,
+  .ClaimTab_textarea__0jcXa {
     width: 100%;
     padding: 16px;
     border: 2px solid #e5e7eb;
@@ -211,15 +233,65 @@
     background: white;
   }
   
-  .ClaimTab_input__czK2W:focus {
+  .ClaimTab_input__czK2W:focus,
+  .ClaimTab_textarea__0jcXa:focus {
     outline: none;
     border-color: #10b981;
     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
     transform: translateY(-1px);
   }
   
+  .ClaimTab_input__czK2W:disabled {
+    background: #f9fafb;
+    color: #6b7280;
+    cursor: not-allowed;
+  }
+  
+  .ClaimTab_textarea__0jcXa {
+    resize: vertical;
+    font-family: 'Fira Code', Monaco, monospace;
+    line-height: 1.4;
+  }
+  
+  .ClaimTab_inputHint__PnkJh {
+    margin-top: 6px;
+    font-size: 14px;
+    color: #6b7280;
+    font-style: italic;
+  }
+  
+  .ClaimTab_buttonGroup__CKBQj {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 30px;
+  }
+  
+  .ClaimTab_checkButton__Ua8JC {
+    flex: 1 1;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .ClaimTab_checkButton__Ua8JC:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(59, 130, 246, 0.4);
+  }
+  
+  .ClaimTab_checkButton__Ua8JC:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
   .ClaimTab_claimButton__Tygyf {
-    width: 100%;
+    flex: 2 1;
     padding: 18px 24px;
     background: linear-gradient(135deg, #10b981, #059669);
     color: white;
@@ -262,6 +334,59 @@
       transform: rotate(360deg);
     }
   }
+  
+  .ClaimTab_instructions__RJmwO {
+    background: #f0f9ff;
+    border: 1px solid #0ea5e9;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .ClaimTab_instructions__RJmwO h3 {
+    color: #0369a1;
+    margin-bottom: 12px;
+  }
+  
+  .ClaimTab_instructions__RJmwO ol {
+    margin: 0 0 16px 20px;
+    color: #374151;
+  }
+  
+  .ClaimTab_instructions__RJmwO ol li {
+    margin-bottom: 4px;
+  }
+  
+  .ClaimTab_warning__d4kIA {
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    padding: 12px;
+    color: #92400e;
+    font-size: 14px;
+  }
+  
+  .ClaimTab_debug__cukNj {
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 20px;
+  }
+  
+  .ClaimTab_debug__cukNj h4 {
+    margin-bottom: 8px;
+    color: #374151;
+  }
+  
+  .ClaimTab_debug__cukNj pre {
+    font-family: 'Fira Code', Monaco, monospace;
+    font-size: 12px;
+    color: #6b7280;
+    margin: 0;
+    white-space: pre-wrap;
+  }
+  
 /*!*************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[11].oneOf[7].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[11].oneOf[7].use[3]!./components/StatusTab/StatusTab.module.css ***!
   \*************************************************************************************************************************************************************************************************************************************************************************************/
@@ -354,6 +479,202 @@
     color: #6b7280;
     font-size: 0.875rem;
   }
+/*!*******************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[11].oneOf[7].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[11].oneOf[7].use[3]!./components/SimpleMassTransfer/SimpleMassTransfer.module.css ***!
+  \*******************************************************************************************************************************************************************************************************************************************************************************************************/
+.SimpleMassTransfer_container__HTjRB {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.SimpleMassTransfer_title__kN24K {
+    font-size: 2.5rem;
+    text-align: center;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+}
+
+.SimpleMassTransfer_subtitle__DgWxd {
+    text-align: center;
+    color: #6b7280;
+    font-size: 1.1rem;
+    margin-bottom: 40px;
+}
+
+.SimpleMassTransfer_status__vBnp9 {
+    margin-bottom: 30px;
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.SimpleMassTransfer_connected__Obewj {
+    background: #d1fae5;
+    color: #065f46;
+    border: 2px solid #10b981;
+}
+
+.SimpleMassTransfer_disconnected__LlkG6 {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 2px solid #f87171;
+}
+
+.SimpleMassTransfer_formGroup__19dD6 {
+    margin-bottom: 30px;
+}
+
+.SimpleMassTransfer_label__mXg3F {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 700;
+    color: #374151;
+    font-size: 18px;
+}
+
+.SimpleMassTransfer_input__hNPyv,
+.SimpleMassTransfer_textarea__xfraa {
+    width: 100%;
+    padding: 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 16px;
+    font-family: inherit;
+    transition: all 0.3s ease;
+}
+
+.SimpleMassTransfer_input__hNPyv:focus,
+.SimpleMassTransfer_textarea__xfraa:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.SimpleMassTransfer_textarea__xfraa {
+    font-family: 'Fira Code', Monaco, monospace;
+    line-height: 1.5;
+    resize: vertical;
+}
+
+.SimpleMassTransfer_previewButton__ACASA {
+    margin-top: 10px;
+    padding: 10px 20px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.SimpleMassTransfer_previewButton__ACASA:hover {
+    background: #2563eb;
+}
+
+.SimpleMassTransfer_progress__ZHZV6 {
+    margin-bottom: 20px;
+}
+
+.SimpleMassTransfer_progressBar__uzrW1 {
+    width: 100%;
+    height: 20px;
+    background: #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.SimpleMassTransfer_progressFill__oNWun {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #059669);
+    transition: width 0.3s ease;
+}
+
+.SimpleMassTransfer_progressText__ajd5e {
+    text-align: center;
+    margin-top: 10px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.SimpleMassTransfer_sendButton__z6X72 {
+    width: 100%;
+    padding: 20px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    font-size: 20px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.SimpleMassTransfer_sendButton__z6X72:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 20px 40px rgba(16, 185, 129, 0.4);
+}
+
+.SimpleMassTransfer_sendButton__z6X72:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.SimpleMassTransfer_spinner__Mr52y {
+    width: 24px;
+    height: 24px;
+    border: 3px solid transparent;
+    border-top: 3px solid currentColor;
+    border-radius: 50%;
+    animation: SimpleMassTransfer_spin__LZbJ7 1s linear infinite;
+}
+
+@keyframes SimpleMassTransfer_spin__LZbJ7 {
+    to { transform: rotate(360deg); }
+}
+
+.SimpleMassTransfer_instructions__iOPK0 {
+    background: #f0f9ff;
+    border: 2px solid #0ea5e9;
+    border-radius: 16px;
+    padding: 25px;
+}
+
+.SimpleMassTransfer_instructions__iOPK0 h3 {
+    color: #0369a1;
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+}
+
+.SimpleMassTransfer_instructions__iOPK0 ol {
+    margin: 0 0 20px 25px;
+    color: #374151;
+}
+
+.SimpleMassTransfer_instructions__iOPK0 ol li {
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.SimpleMassTransfer_warning__WhPG0 {
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    padding: 15px;
+    color: #92400e;
+}
 /*!***************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[11].oneOf[7].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[11].oneOf[7].use[3]!./app/page.module.css ***!
   \***************************************************************************************************************************************************************************************************************************************************************/

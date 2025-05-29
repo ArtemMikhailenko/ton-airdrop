@@ -2,16 +2,16 @@
 
 import { useState, useEffect } from 'react'
 import { TonConnectButton, useTonConnectUI } from '@tonconnect/ui-react'
-import toast from 'react-hot-toast'
 import styles from './page.module.css'
 import DeployTab from '@/components/DeployTab/DeployTab'
 import ClaimTab from '@/components/ClaimTab/ClaimTab'
 import StatusTab from '@/components/StatusTab/StatusTab'
+import SimpleMassTransfer from '@/components/SimpleMassTransfer/SimpleMassTransfer' // 🔄 НОВЫЙ ИМПОРТ
 
-type TabType = 'deploy' | 'claim' | 'status'
+type TabType = 'mass-transfer' | 'deploy' | 'claim' | 'status' // 🔄 Добавили новую вкладку
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<TabType>('deploy')
+  const [activeTab, setActiveTab] = useState<TabType>('mass-transfer') // 🔄 По умолчанию новая вкладка
   const [tonConnectUI] = useTonConnectUI()
   const [connected, setConnected] = useState(false)
 
@@ -30,7 +30,7 @@ export default function Home() {
     <div className={styles.container}>
       <header className={styles.header}>
         <h1>🎁 TON Airdrop Manager</h1>
-        <p>Deploy and manage your jetton airdrops on TON Testnet</p>
+        <p>Send tokens to multiple recipients easily</p>
         <div className={styles.connectButton}>
           <TonConnectButton />
         </div>
@@ -39,11 +39,18 @@ export default function Home() {
       <main className={styles.main}>
         <div className={styles.card}>
           <div className={styles.tabs}>
+            {/* 🔄 НОВАЯ ВКЛАДКА */}
+            <button
+              className={`${styles.tab} ${activeTab === 'mass-transfer' ? styles.active : ''}`}
+              onClick={() => setActiveTab('mass-transfer')}
+            >
+              🚀 Mass Transfer
+            </button>
             <button
               className={`${styles.tab} ${activeTab === 'deploy' ? styles.active : ''}`}
               onClick={() => setActiveTab('deploy')}
             >
-              🚀 Deploy Airdrop
+              📝 Deploy Airdrop
             </button>
             <button
               className={`${styles.tab} ${activeTab === 'claim' ? styles.active : ''}`}
@@ -67,6 +74,8 @@ export default function Home() {
               </div>
             ) : (
               <>
+                {/* 🔄 НОВЫЙ КОМПОНЕНТ */}
+                {activeTab === 'mass-transfer' && <SimpleMassTransfer />}
                 {activeTab === 'deploy' && <DeployTab />}
                 {activeTab === 'claim' && <ClaimTab />}
                 {activeTab === 'status' && <StatusTab />}

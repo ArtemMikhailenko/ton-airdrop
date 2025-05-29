@@ -1,0 +1,193 @@
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.title {
+    font-size: 2.5rem;
+    text-align: center;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+}
+
+.subtitle {
+    text-align: center;
+    color: #6b7280;
+    font-size: 1.1rem;
+    margin-bottom: 40px;
+}
+
+.status {
+    margin-bottom: 30px;
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.connected {
+    background: #d1fae5;
+    color: #065f46;
+    border: 2px solid #10b981;
+}
+
+.disconnected {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 2px solid #f87171;
+}
+
+.formGroup {
+    margin-bottom: 30px;
+}
+
+.label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 700;
+    color: #374151;
+    font-size: 18px;
+}
+
+.input,
+.textarea {
+    width: 100%;
+    padding: 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 16px;
+    font-family: inherit;
+    transition: all 0.3s ease;
+}
+
+.input:focus,
+.textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.textarea {
+    font-family: 'Fira Code', Monaco, monospace;
+    line-height: 1.5;
+    resize: vertical;
+}
+
+.previewButton {
+    margin-top: 10px;
+    padding: 10px 20px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.previewButton:hover {
+    background: #2563eb;
+}
+
+.progress {
+    margin-bottom: 20px;
+}
+
+.progressBar {
+    width: 100%;
+    height: 20px;
+    background: #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progressFill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #059669);
+    transition: width 0.3s ease;
+}
+
+.progressText {
+    text-align: center;
+    margin-top: 10px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.sendButton {
+    width: 100%;
+    padding: 20px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    font-size: 20px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.sendButton:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 20px 40px rgba(16, 185, 129, 0.4);
+}
+
+.sendButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid transparent;
+    border-top: 3px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.instructions {
+    background: #f0f9ff;
+    border: 2px solid #0ea5e9;
+    border-radius: 16px;
+    padding: 25px;
+}
+
+.instructions h3 {
+    color: #0369a1;
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+}
+
+.instructions ol {
+    margin: 0 0 20px 25px;
+    color: #374151;
+}
+
+.instructions ol li {
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.warning {
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    padding: 15px;
+    color: #92400e;
+}

@@ -1,3 +1,4 @@
+
 .container {
     max-width: 600px;
     margin: 0 auto;
@@ -11,8 +12,28 @@
     text-align: center;
   }
   
+  .connectionStatus {
+    margin-bottom: 20px;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 600;
+  }
+  
+  .connected {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+  }
+  
+  .disconnected {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
+  
   .formGroup {
-    margin-bottom: 28px;
+    margin-bottom: 24px;
   }
   
   .label {
@@ -23,7 +44,8 @@
     font-size: 16px;
   }
   
-  .input {
+  .input,
+  .textarea {
     width: 100%;
     padding: 16px;
     border: 2px solid #e5e7eb;
@@ -34,15 +56,65 @@
     background: white;
   }
   
-  .input:focus {
+  .input:focus,
+  .textarea:focus {
     outline: none;
     border-color: #10b981;
     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
     transform: translateY(-1px);
   }
   
+  .input:disabled {
+    background: #f9fafb;
+    color: #6b7280;
+    cursor: not-allowed;
+  }
+  
+  .textarea {
+    resize: vertical;
+    font-family: 'Fira Code', Monaco, monospace;
+    line-height: 1.4;
+  }
+  
+  .inputHint {
+    margin-top: 6px;
+    font-size: 14px;
+    color: #6b7280;
+    font-style: italic;
+  }
+  
+  .buttonGroup {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 30px;
+  }
+  
+  .checkButton {
+    flex: 1;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .checkButton:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(59, 130, 246, 0.4);
+  }
+  
+  .checkButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
   .claimButton {
-    width: 100%;
+    flex: 2;
     padding: 18px 24px;
     background: linear-gradient(135deg, #10b981, #059669);
     color: white;
@@ -85,3 +157,56 @@
       transform: rotate(360deg);
     }
   }
+  
+  .instructions {
+    background: #f0f9ff;
+    border: 1px solid #0ea5e9;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .instructions h3 {
+    color: #0369a1;
+    margin-bottom: 12px;
+  }
+  
+  .instructions ol {
+    margin: 0 0 16px 20px;
+    color: #374151;
+  }
+  
+  .instructions ol li {
+    margin-bottom: 4px;
+  }
+  
+  .warning {
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    padding: 12px;
+    color: #92400e;
+    font-size: 14px;
+  }
+  
+  .debug {
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 20px;
+  }
+  
+  .debug h4 {
+    margin-bottom: 8px;
+    color: #374151;
+  }
+  
+  .debug pre {
+    font-family: 'Fira Code', Monaco, monospace;
+    font-size: 12px;
+    color: #6b7280;
+    margin: 0;
+    white-space: pre-wrap;
+  }
+  
