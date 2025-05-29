@@ -11,10 +11,8 @@ export interface Recipient {
     amount: string; // Теперь в обычном формате: "1.5", "2", "0.5"
 }
 
-const client = new TonClient({ 
-    endpoint: 'https://testnet.toncenter.com/api/v2/jsonRPC',
-    apiKey: 'your-api-key-here' // Замените на ваш API ключ
-});
+const client = new TonClient({ endpoint: 'https://toncenter.com/api/v2/jsonRPC' });
+
 
 export function useMassTransfer() {
     const [isSending, setIsSending] = useState(false);
