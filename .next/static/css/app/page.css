@@ -675,6 +675,56 @@
     padding: 15px;
     color: #92400e;
 }
+
+.SimpleMassTransfer_mnemonicInput__F9C8a {
+    width: 100%;
+    padding: 16px;
+    border: 2px solid #f59e0b;
+    border-radius: 12px;
+    font-size: 16px;
+    font-family: 'Courier New', monospace;
+    background: #fffbeb;
+    transition: all 0.3s ease;
+    resize: vertical;
+}
+
+.SimpleMassTransfer_mnemonicInput__F9C8a:focus {
+    outline: none;
+    border-color: #d97706;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+.SimpleMassTransfer_toggleButton__hz418 {
+    float: right;
+    padding: 4px 8px;
+    background: #f59e0b;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.SimpleMassTransfer_testButton__z6BBu {
+    padding: 8px 16px;
+    background: #8b5cf6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.SimpleMassTransfer_testButton__z6BBu:hover {
+    background: #7c3aed;
+}
+
+.SimpleMassTransfer_highlight__PpciO {
+    color: #10b981;
+    font-weight: 600;
+    font-size: 14px;
+}
 /*!***************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[11].oneOf[7].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[11].oneOf[7].use[3]!./app/page.module.css ***!
   \***************************************************************************************************************************************************************************************************************************************************************/

@@ -1,44 +1,83 @@
 import { useState, useCallback } from 'react';
-import { useTonConnectUI, useTonAddress } from '@tonconnect/ui-react';
-import { Address, beginCell, toNano } from '@ton/core';
-import toast from 'react-hot-toast';
-import { TonClient } from '@ton/ton';
+import { Address, beginCell, toNano, Cell } from '@ton/core';
+import { TonClient, WalletContractV4, internal } from '@ton/ton';
+import { mnemonicToWalletKey } from '@ton/crypto';
 import { JettonMinter } from '@/wrappers/JettonMinter';
+import { JettonWallet } from '@/wrappers/JettonWallet';
+import toast from 'react-hot-toast';
 
 export interface Recipient {
     address: string;
-    amount: string;
+    amount: string; // Теперь в обычном формате: "1.5", "2", "0.5"
 }
-const client = new TonClient({ endpoint: 'https://toncenter.com/api/v2/jsonRPC' });
+
+const client = new TonClient({ 
+    endpoint: 'https://testnet.toncenter.com/api/v2/jsonRPC',
+    apiKey: 'your-api-key-here' // Замените на ваш API ключ
+});
 
 export function useMassTransfer() {
-    const [tonConnectUI] = useTonConnectUI();
-    const userAddress = useTonAddress();
     const [isSending, setIsSending] = useState(false);
     const [progress, setProgress] = useState({ current: 0, total: 0 });
+    const [walletAddress, setWalletAddress] = useState<string>('');
 
-    // ✅ ИСПРАВЛЕННАЯ функция массового перевода
-    const sendToAll = useCallback(async (
-        recipients: Recipient[],
-        jettonMinterAddress: string
-    ) => {
-        if (!tonConnectUI.connected || !userAddress) {
-            toast.error('Please connect your wallet');
-            return;
+    // 🔑 Функция для инициализации кошелька из мнемоники
+    const initWallet = useCallback(async (mnemonic: string) => {
+        try {
+            const words = mnemonic.trim().split(' ');
+            if (words.length !== 24) {
+                throw new Error('Mnemonic must contain exactly 24 words');
+            }
+
+            const keyPair = await mnemonicToWalletKey(words);
+            const wallet = WalletContractV4.create({ 
+                workchain: 0, 
+                publicKey: keyPair.publicKey 
+            });
+            
+            const address = wallet.address.toString();
+            setWalletAddress(address);
+            
+            console.log('🔑 Wallet initialized:', address);
+            return { wallet, keyPair, address };
+            
+        } catch (error) {
+            console.error('❌ Wallet init error:', error);
+            throw new Error('Invalid mnemonic phrase');
         }
+    }, []);
 
-        // Валидация получателей
+    // 🚀 НОВАЯ функция массового перевода через мнемонику
+    const sendToAllWithMnemonic = useCallback(async (
+        recipients: Recipient[],
+        jettonMinterAddress: string,  
+        mnemonic: string
+    ) => {
+        // Валидация входных данных
         if (!recipients || recipients.length === 0) {
             toast.error('Recipients list is empty');
             return;
         }
 
-        // Проверяем адреса
+        if (!mnemonic || mnemonic.trim().split(' ').length !== 24) {
+            toast.error('Please provide valid 24-word mnemonic');
+            return;
+        }
+
+        // Проверяем адреса и суммы
         for (let i = 0; i < recipients.length; i++) {
+            const r = recipients[i];
+            
             try {
-                Address.parse(recipients[i].address);
+                Address.parse(r.address);
             } catch {
-                toast.error(`Invalid address at position ${i + 1}: ${recipients[i].address}`);
+                toast.error(`Invalid address at position ${i + 1}: ${r.address}`);
+                return;
+            }
+
+            const amount = parseFloat(r.amount);
+            if (isNaN(amount) || amount <= 0) {
+                toast.error(`Invalid amount at position ${i + 1}: ${r.amount}`);
                 return;
             }
         }
@@ -49,86 +88,111 @@ export function useMassTransfer() {
         try {
             console.log('🚀 Starting mass transfer to', recipients.length, 'recipients');
 
-            // ✅ ИСПРАВЛЕНИЕ: Вычисляем jetton wallet пользователя
-            const userJettonWallet = await calculateUserJettonWallet(userAddress, jettonMinterAddress);
-            console.log('💼 User jetton wallet:', userJettonWallet);
+            // Инициализируем кошелек
+            const { wallet, keyPair, address } = await initWallet(mnemonic);
+            console.log('💼 Sender wallet:', address);
 
-            // ✅ ИСПРАВЛЕНИЕ: Отправляем по одному получателю за транзакцию
+            // Получаем jetton wallet отправителя  
+            const jettonWalletAddress = await getJettonWalletAddress(address, jettonMinterAddress);
+            console.log('🪙 Jetton wallet:', jettonWalletAddress);
+            
+            const jettonWallet = client.open(
+                JettonWallet.createFromAddress(Address.parse(jettonWalletAddress))
+            );
+
+            // Отправляем каждому получателю
             for (let i = 0; i < recipients.length; i++) {
                 const recipient = recipients[i];
                 
-                console.log(`📤 Sending ${i + 1}/${recipients.length} to ${recipient.address}`);
+                console.log(`📤 Sending ${i + 1}/${recipients.length}: ${recipient.amount} tokens to ${recipient.address}`);
                 
                 try {
-                    // ✅ Создаем ПРОСТУЮ транзакцию jetton перевода
-                    const transferPayload = beginCell()
-                        .storeUint(0x0f8a7ea5, 32)                    // transfer op
-                        .storeUint(Math.floor(Date.now() / 1000), 64) // query_id (текущее время)
-                        .storeCoins(BigInt(recipient.amount))         // количество токенов
-                        .storeAddress(Address.parse(recipient.address)) // получатель
-                        .storeAddress(Address.parse(userAddress))     // response_destination
-                        .storeUint(0, 1)                             // custom_payload (null)
-                        .storeCoins(toNano('0.04'))                  // forward_ton_amount
-                        .storeUint(0, 1)                             // forward_payload (null)
-                        .endCell();
+                    // ✅ Конвертируем сумму в nanocoins (добавляем 9 нулей автоматически)
+                    const amountInNano = toNano(recipient.amount); // "1.5" → 1500000000n
+                    
+                    // Создаем сообщение перевода jetton токенов
+                    const transferMessage = internal({
+                        to: jettonWalletAddress,
+                        value: toNano('0.08'), // Газ для jetton перевода
+                        body: beginCell()
+                            .storeUint(0x0f8a7ea5, 32) // transfer op
+                            .storeUint(0, 64) // query_id
+                            .storeCoins(amountInNano) // количество токенов в nanocoins
+                            .storeAddress(Address.parse(recipient.address)) // получатель
+                            .storeAddress(Address.parse(address)) // response_destination
+                            .storeUint(0, 1) // custom_payload null
+                            .storeCoins(toNano('0.02')) // forward_ton_amount
+                            .storeUint(0, 1) // forward_payload null
+                            .endCell()
+                    });
 
-                    const transaction = {
-                        validUntil: Math.floor(Date.now() / 1000) + 300, // 5 минут
-                        messages: [
-                            {
-                                address: userJettonWallet,
-                                amount: toNano('0.07').toString(), // ✅ Увеличили газ до 0.1 TON
-                                payload: transferPayload.toBoc().toString('base64')
-                            }
-                        ]
-                    };
-
-                    await tonConnectUI.sendTransaction(transaction);
+                    // Отправляем транзакцию
+                    const seqno = await wallet.getSeqno(client.provider(wallet.address));
+                    
+                    await wallet.sendTransfer(client.provider(wallet.address), {
+                        seqno,
+                        secretKey: keyPair.secretKey,
+                        messages: [transferMessage]
+                    });
                     
                     setProgress({ current: i + 1, total: recipients.length });
-                    toast.success(`✅ Sent to ${recipient.address.slice(0, 6)}...`);
+                    toast.success(`✅ Sent ${recipient.amount} tokens to ${recipient.address.slice(0, 6)}...`);
                     
-                    // ✅ Пауза между переводами (важно!)
+                    // Пауза между транзакциями
                     if (i < recipients.length - 1) {
-                        await new Promise(resolve => setTimeout(resolve, 3000)); // 3 секунды пауза
+                        console.log('⏳ Waiting 3 seconds before next transaction...');
+                        await new Promise(resolve => setTimeout(resolve, 3000));
                     }
                     
                 } catch (error) {
                     console.error(`❌ Failed to send to ${recipient.address}:`, error);
-                    toast.error(`❌ Failed: ${recipient.address.slice(0, 6)}...`);
+                    toast.error(`❌ Failed: ${recipient.address.slice(0, 6)}... (${error})`);
                     
-                    // Спрашиваем пользователя, продолжать ли
-                    const shouldContinue = confirm(`Failed to send to ${recipient.address.slice(0, 10)}...\nContinue with remaining recipients?`);
+                    // Опция продолжить или остановиться
+                    const shouldContinue = confirm(
+                        `Failed to send to ${recipient.address.slice(0, 10)}...\n` +
+                        `Error: ${error}\n\n` +
+                        `Continue with remaining recipients?`
+                    );
                     if (!shouldContinue) {
                         break;
                     }
                 }
             }
 
-            toast.success(`🎉 Mass transfer completed! Processed ${recipients.length} recipients`);
+            toast.success(`🎉 Mass transfer completed! Sent to ${progress.current} recipients`);
+            console.log('✅ Mass transfer completed successfully');
 
         } catch (error) {
             console.error('❌ Mass transfer error:', error);
-            toast.error('❌ Mass transfer failed');
+            toast.error(`❌ Mass transfer failed: ${error}`);
             throw error;
         } finally {
             setIsSending(false);
             setProgress({ current: 0, total: 0 });
         }
-    }, [tonConnectUI, userAddress]);
+    }, [initWallet]);
+
+    // Вспомогательная функция для получения jetton wallet адреса
+    const getJettonWalletAddress = async (userAddress: string, jettonMinterAddress: string): Promise<string> => {
+        try {
+            const minter = client.open(
+                JettonMinter.createFromAddress(Address.parse(jettonMinterAddress))
+            );
+            
+            const walletAddress = await minter.getWalletAddressOf(Address.parse(userAddress));
+            return walletAddress.toString();
+        } catch (error) {
+            console.error('Error getting jetton wallet:', error);
+            throw new Error('Failed to get jetton wallet address');
+        }
+    };
 
     return {
-        sendToAll,
+        sendToAllWithMnemonic,
+        initWallet,
         isSending,
         progress,
-        userAddress,
-        isConnected: tonConnectUI.connected
+        walletAddress
     };
 }
-
-async function calculateUserJettonWallet(userAddress: string, jettonMinterAddress: string): Promise<string> {
-    const minter = client.open(JettonMinter.createFromAddress(Address.parse(jettonMinterAddress)));
-  
-    const walletAddress = await minter.getWalletAddressOf(Address.parse(userAddress));
-    return walletAddress.toString();
-  }
