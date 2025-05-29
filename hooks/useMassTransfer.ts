@@ -8,18 +8,67 @@ import toast from 'react-hot-toast';
 
 export interface Recipient {
     address: string;
-    amount: string; // Теперь в обычном формате: "1.5", "2", "0.5"
+    amount: string;
 }
 
-const client = new TonClient({ endpoint: 'https://toncenter.com/api/v2/jsonRPC' });
+// 🔄 Try multiple endpoints with fallback
+const TON_ENDPOINTS = [
+    'https://toncenter.com/api/v2/jsonRPC',
+    'https://mainnet-v4.tonhubapi.com',
+    'https://mainnet.tonapi.io/v2',
+];
 
+let currentEndpointIndex = 0;
+let client = new TonClient({ endpoint: TON_ENDPOINTS[0] });
+
+// 🛡️ Rate limiting and retry logic
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const withRetry = async <T>(
+    operation: () => Promise<T>, 
+    maxRetries = 3, 
+    baseDelayMs = 2000
+): Promise<T> => {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            return await operation();
+        } catch (error: any) {
+            const isRateLimit = error?.response?.status === 429 || 
+                              error?.code === 429 || 
+                              error?.message?.includes('429') ||
+                              error?.message?.includes('rate limit') ||
+                              error?.message?.includes('Too Many Requests');
+
+            if (isRateLimit && attempt < maxRetries) {
+                // Exponential backoff: 2s, 4s, 8s
+                const delayMs = baseDelayMs * Math.pow(2, attempt - 1);
+                console.log(`⏳ Rate limited, waiting ${delayMs}ms before retry ${attempt}/${maxRetries}`);
+                toast(`⏳ Rate limited, retrying in ${delayMs/1000}s...`, { duration: 2000 });
+                
+                await delay(delayMs);
+                
+                // Try switching endpoint on rate limit
+                if (attempt === Math.floor(maxRetries / 2)) {
+                    currentEndpointIndex = (currentEndpointIndex + 1) % TON_ENDPOINTS.length;
+                    client = new TonClient({ endpoint: TON_ENDPOINTS[currentEndpointIndex] });
+                    console.log(`🔄 Switching to endpoint: ${TON_ENDPOINTS[currentEndpointIndex]}`);
+                }
+                
+                continue;
+            }
+            
+            // If not rate limit or max retries reached, throw error
+            throw error;
+        }
+    }
+    throw new Error(`Operation failed after ${maxRetries} attempts`);
+};
 
 export function useMassTransfer() {
     const [isSending, setIsSending] = useState(false);
     const [progress, setProgress] = useState({ current: 0, total: 0 });
     const [walletAddress, setWalletAddress] = useState<string>('');
 
-    // 🔑 Функция для инициализации кошелька из мнемоники
     const initWallet = useCallback(async (mnemonic: string) => {
         try {
             const words = mnemonic.trim().split(' ');
@@ -45,13 +94,11 @@ export function useMassTransfer() {
         }
     }, []);
 
-    // 🚀 НОВАЯ функция массового перевода через мнемонику
     const sendToAllWithMnemonic = useCallback(async (
         recipients: Recipient[],
         jettonMinterAddress: string,  
         mnemonic: string
     ) => {
-        // Валидация входных данных
         if (!recipients || recipients.length === 0) {
             toast.error('Recipients list is empty');
             return;
@@ -62,7 +109,7 @@ export function useMassTransfer() {
             return;
         }
 
-        // Проверяем адреса и суммы
+        // Validate addresses and amounts
         for (let i = 0; i < recipients.length; i++) {
             const r = recipients[i];
             
@@ -86,67 +133,70 @@ export function useMassTransfer() {
         try {
             console.log('🚀 Starting mass transfer to', recipients.length, 'recipients');
 
-            // Инициализируем кошелек
-            const { wallet, keyPair, address } = await initWallet(mnemonic);
+            // Initialize wallet with retry
+            const { wallet, keyPair, address } = await withRetry(() => initWallet(mnemonic));
             console.log('💼 Sender wallet:', address);
 
-            // Получаем jetton wallet отправителя  
-            const jettonWalletAddress = await getJettonWalletAddress(address, jettonMinterAddress);
+            // Get jetton wallet with retry
+            const jettonWalletAddress = await withRetry(() => 
+                getJettonWalletAddress(address, jettonMinterAddress)
+            );
             console.log('🪙 Jetton wallet:', jettonWalletAddress);
             
             const jettonWallet = client.open(
                 JettonWallet.createFromAddress(Address.parse(jettonWalletAddress))
             );
 
-            // Отправляем каждому получателю
+            // Send to each recipient with proper rate limiting
             for (let i = 0; i < recipients.length; i++) {
                 const recipient = recipients[i];
                 
                 console.log(`📤 Sending ${i + 1}/${recipients.length}: ${recipient.amount} tokens to ${recipient.address}`);
                 
                 try {
-                    // ✅ Конвертируем сумму в nanocoins (добавляем 9 нулей автоматически)
-                    const amountInNano = toNano(recipient.amount); // "1.5" → 1500000000n
+                    const amountInNano = toNano(recipient.amount);
                     
-                    // Создаем сообщение перевода jetton токенов
+                    // Create transfer message
                     const transferMessage = internal({
                         to: jettonWalletAddress,
-                        value: toNano('0.08'), // Газ для jetton перевода
+                        value: toNano('0.08'),
                         body: beginCell()
                             .storeUint(0x0f8a7ea5, 32) // transfer op
                             .storeUint(0, 64) // query_id
-                            .storeCoins(amountInNano) // количество токенов в nanocoins
-                            .storeAddress(Address.parse(recipient.address)) // получатель
-                            .storeAddress(Address.parse(address)) // response_destination
+                            .storeCoins(amountInNano)
+                            .storeAddress(Address.parse(recipient.address))
+                            .storeAddress(Address.parse(address))
                             .storeUint(0, 1) // custom_payload null
                             .storeCoins(toNano('0.02')) // forward_ton_amount
                             .storeUint(0, 1) // forward_payload null
                             .endCell()
                     });
 
-                    // Отправляем транзакцию
-                    const seqno = await wallet.getSeqno(client.provider(wallet.address));
-                    
-                    await wallet.sendTransfer(client.provider(wallet.address), {
-                        seqno,
-                        secretKey: keyPair.secretKey,
-                        messages: [transferMessage]
-                    });
+                    // Send transaction with retry logic
+                    await withRetry(async () => {
+                        const seqno = await wallet.getSeqno(client.provider(wallet.address));
+                        
+                        return await wallet.sendTransfer(client.provider(wallet.address), {
+                            seqno,
+                            secretKey: keyPair.secretKey,
+                            messages: [transferMessage]
+                        });
+                    }, 5, 3000); // 5 retries, starting with 3s delay
                     
                     setProgress({ current: i + 1, total: recipients.length });
                     toast.success(`✅ Sent ${recipient.amount} tokens to ${recipient.address.slice(0, 6)}...`);
                     
-                    // Пауза между транзакциями
+                    // 🚨 INCREASED DELAY between transactions to avoid rate limiting
                     if (i < recipients.length - 1) {
-                        console.log('⏳ Waiting 3 seconds before next transaction...');
-                        await new Promise(resolve => setTimeout(resolve, 3000));
+                        const delayTime = 5000; // 5 seconds between transactions
+                        console.log(`⏳ Waiting ${delayTime/1000} seconds before next transaction...`);
+                        await delay(delayTime);
                     }
                     
                 } catch (error) {
                     console.error(`❌ Failed to send to ${recipient.address}:`, error);
                     toast.error(`❌ Failed: ${recipient.address.slice(0, 6)}... (${error})`);
                     
-                    // Опция продолжить или остановиться
                     const shouldContinue = confirm(
                         `Failed to send to ${recipient.address.slice(0, 10)}...\n` +
                         `Error: ${error}\n\n` +
@@ -155,6 +205,9 @@ export function useMassTransfer() {
                     if (!shouldContinue) {
                         break;
                     }
+                    
+                    // Wait longer after error before continuing
+                    await delay(8000);
                 }
             }
 
@@ -171,7 +224,6 @@ export function useMassTransfer() {
         }
     }, [initWallet]);
 
-    // Вспомогательная функция для получения jetton wallet адреса
     const getJettonWalletAddress = async (userAddress: string, jettonMinterAddress: string): Promise<string> => {
         try {
             const minter = client.open(
