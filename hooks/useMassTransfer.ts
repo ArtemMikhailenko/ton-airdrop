@@ -2,11 +2,14 @@ import { useState, useCallback } from 'react';
 import { useTonConnectUI, useTonAddress } from '@tonconnect/ui-react';
 import { Address, beginCell, toNano } from '@ton/core';
 import toast from 'react-hot-toast';
+import { TonClient } from '@ton/ton';
+import { JettonMinter } from '@/wrappers/JettonMinter';
 
 export interface Recipient {
     address: string;
     amount: string;
 }
+const client = new TonClient({ endpoint: 'https://toncenter.com/api/v2/jsonRPC' });
 
 export function useMassTransfer() {
     const [tonConnectUI] = useTonConnectUI();
@@ -65,7 +68,7 @@ export function useMassTransfer() {
                         .storeAddress(Address.parse(recipient.address)) // получатель
                         .storeAddress(Address.parse(userAddress))     // response_destination
                         .storeUint(0, 1)                             // custom_payload (null)
-                        .storeCoins(toNano('0.01'))                  // forward_ton_amount
+                        .storeCoins(toNano('0.04'))                  // forward_ton_amount
                         .storeUint(0, 1)                             // forward_payload (null)
                         .endCell();
 
@@ -74,7 +77,7 @@ export function useMassTransfer() {
                         messages: [
                             {
                                 address: userJettonWallet,
-                                amount: toNano('0.1').toString(), // ✅ Увеличили газ до 0.1 TON
+                                amount: toNano('0.07').toString(), // ✅ Увеличили газ до 0.1 TON
                                 payload: transferPayload.toBoc().toString('base64')
                             }
                         ]
@@ -123,23 +126,9 @@ export function useMassTransfer() {
     };
 }
 
-// ✅ Функция для вычисления адреса jetton кошелька пользователя
 async function calculateUserJettonWallet(userAddress: string, jettonMinterAddress: string): Promise<string> {
-    try {
-        // ✅ УПРОЩЕННЫЙ способ - используем стандартную формулу TON
-        // В реальном проекте нужно вызвать get_wallet_address у minter'а
-        
-        console.log('🔍 Calculating jetton wallet for user:', userAddress);
-        console.log('🏭 Jetton minter:', jettonMinterAddress);
-        
-        // Для демо возвращаем вычисленный адрес
-        // В продакшене: вызов get_wallet_address метода у jetton minter'а
-        const calculatedAddress = `EQA${userAddress.slice(3, 12)}${jettonMinterAddress.slice(-10)}JW`;
-        
-        return calculatedAddress;
-        
-    } catch (error) {
-        console.error('Error calculating jetton wallet:', error);
-        throw new Error('Could not calculate jetton wallet address');
-    }
-}
+    const minter = client.open(JettonMinter.createFromAddress(Address.parse(jettonMinterAddress)));
+  
+    const walletAddress = await minter.getWalletAddressOf(Address.parse(userAddress));
+    return walletAddress.toString();
+  }
